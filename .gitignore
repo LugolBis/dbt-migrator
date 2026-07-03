@@ -1,0 +1,7 @@
+/target
+*.migrated
+__pycache__/
+*.so
+*.pyd
+dist/
+.venv/
