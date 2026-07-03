@@ -1,0 +1,40 @@
+[package]
+name = "dbt_migrator"
+version = "0.1.0"
+edition = "2021"
+description = "Migrate Legacy SQL codebase to dbt models"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "dbt_migrator"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "dbt_migrator"
+path = "src/main.rs"
+
+[dependencies]
+sqlparser = { version = "0.52", features = ["visitor"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1"
+clap = { version = "~4.4", features = ["derive"] }
+walkdir = "2"
+rayon = "1"
+thiserror = "1"
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+csv = "1"
+regex = "1"
+indexmap = "=2.2.6"
+rayon-core = "=1.12.1"
+pyo3 = { version = "0.21", features = ["extension-module"], optional = true }
+
+[features]
+default = []
+python = ["dep:pyo3"]
+
+[profile.release]
+lto = true
+codegen-units = 1

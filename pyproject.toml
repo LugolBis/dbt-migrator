@@ -1,0 +1,30 @@
+[build-system]
+requires = ["maturin>=1.5,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "dbt_migrator"
+version = "0.1.0"
+description = "Migrate Legacy SQL codebase to dbt : automaticaly generate Lineage."
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+]
+
+[tool.maturin]
+# Active le binding PyO3 uniquement pour la wheel Python (la feature reste
+# désactivée par défaut pour le binaire CLI, qui n'a pas besoin de Python).
+features = ["python"]
+module-name = "dbt_migrator"
+
+# Build :   maturin build --release
+# Dev :     maturin develop
+# Usage Python:
+#   import dbt_migrator
+#   report_json = dbt_migrator.migrate_project(
+#       project_dir="chemin/vers/projet_dbt",
+#       sql_path="chemin/vers/scripts_sql",
+#       dialect="mssql",
+#       config_path=None,
+#   )
