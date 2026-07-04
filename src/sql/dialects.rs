@@ -3,7 +3,7 @@ use sqlparser::dialect::{
     MySqlDialect, PostgreSqlDialect, SnowflakeDialect,
 };
 
-use crate::error::{DbtMigratorError, Result};
+use crate::error::Result;
 
 /// Build the `sqlparser` dialect from the name.
 /// Use it to extend the functionalities and add the support of others dialect.
@@ -16,7 +16,6 @@ pub fn dialect_from_name(name: &str) -> Result<Box<dyn Dialect>> {
         "duckdb" => Ok(Box::new(DuckDbDialect {})),
         "snowflake" => Ok(Box::new(SnowflakeDialect {})),
         "bigquery" => Ok(Box::new(BigQueryDialect {})),
-        "generic" => Ok(Box::new(GenericDialect {})),
-        other => Err(DbtMigratorError::UnknownDialect(other.to_string())),
+        _ => Ok(Box::new(GenericDialect {})),
     }
 }
