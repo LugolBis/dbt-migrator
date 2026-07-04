@@ -1,0 +1,6 @@
+dialect: mssql
+output_mode: copy
+multithreading: true
+allow_tree_fallback: false
+
+conflicts: []
