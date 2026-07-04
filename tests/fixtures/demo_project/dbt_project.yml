@@ -1,0 +1,21 @@
+name: 'demo_project'
+version: '1.0.0'
+profile: 'demo'
+model-paths: ["models"]
+
+models:
+  demo_project:
+    +database: analytics
+    +schema: base_default
+    +tags: ["core"]
+    staging:
+      +schema: staging
+      +tags: ["staging"]
+    marts:
+      +schema: marts
+      finance:
+        +schema: marts_finance
+        +tags: ["finance"]
+      legacy:
+        +schema: marts_legacy
+        +tags: ["legacy"]
