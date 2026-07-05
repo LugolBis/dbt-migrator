@@ -1,0 +1,21 @@
+name: Build sdist
+
+description: Build Python source distribution with maturin
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - uses: PyO3/maturin-action@v1
+      with:
+        maturin-version: "1.14.1"
+        command: sdist
+        args: --out dist
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: sdist
+        path: dist/*.tar.gz

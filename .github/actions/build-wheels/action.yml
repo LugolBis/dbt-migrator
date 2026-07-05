@@ -1,0 +1,33 @@
+name: Build wheels
+
+description: Build Python wheels with maturin
+
+inputs:
+  os:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - uses: dtolnay/rust-toolchain@stable
+
+    - uses: Swatinem/rust-cache@v2
+
+    - name: Build wheel
+      uses: PyO3/maturin-action@v1
+      with:
+        maturin-version: "1.14.1"
+        command: build
+        manylinux: auto
+        args: --release --out dist --compatibility pypi
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: wheel-${{ inputs.os }}
+        path: dist/*.whl
