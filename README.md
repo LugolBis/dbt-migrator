@@ -2,7 +2,6 @@
 
 **Migrate legacy SQL scripts to dbt models** with safe, lineage‑aware `{{ ref(...) }}` replacement.
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/your-org/dbt_migrator/ci.yml?branch=main)](https://github.com/your-org/dbt_migrator/actions)
 [![Crates.io](https://img.shields.io/crates/v/dbt_migrator)](https://crates.io/crates/dbt_migrator)
 [![PyPI](https://img.shields.io/pypi/v/dbt_migrator)](https://pypi.org/project/dbt-migrator/)
 
