@@ -1,41 +1,187 @@
-name: CI
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
+    tags:
+      - "v*"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  MATURIN_VERSION: "1.14.1"
+
+jobs:
+  check-version:
+    name: Check that tag == Cargo.toml version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check tag version and Cargo.toml version
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CARGO_VERSION=$(grep -m1 '^version' Cargo.toml | sed -E 's/version *= *"(.*)"/\1/')
+          echo "tag=$TAG_VERSION  Cargo.toml=$CARGO_VERSION"
+          if [ "$TAG_VERSION" != "$CARGO_VERSION" ]; then
+            echo "::error::The tag ${GITHUB_REF_NAME} (=> $TAG_VERSION) is different from the Cargo.toml version ($CARGO_VERSION)."
+            exit 1
+          fi
+
   test:
+    name: cargo test (${{ matrix.os }})
+    needs: check-version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14, windows-latest]
-
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      - uses: ./.github/actions/rust-test
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --verbose
 
+  publish-crate:
+    name: Publish on crates.io
+    needs: [check-version, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Dry check
+        run: cargo publish --dry-run
+      - name: Publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish
+
+  # PyPI - natives wheels per OS : only one wheel per OS.
   build-wheels:
-    needs: test
+    name: Build the wheel (${{ matrix.os }})
+    needs: [check-version, test]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-14, windows-latest]
-
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
-      - uses: ./.github/actions/build-wheels
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          os: ${{ matrix.os }}
+          python-version: "3.12"
+      - name: Build the wheel
+        uses: PyO3/maturin-action@v1
+        with:
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          command: build
+          manylinux: auto
+          args: --release --out dist --compatibility pypi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}
+          path: dist/*.whl
 
   build-sdist:
-    needs: test
+    name: Build the distribution source
+    needs: check-version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: PyO3/maturin-action@v1
+        with:
+          maturin-version: ${{ env.MATURIN_VERSION }}
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  publish-pypi:
+    name: Publish on PyPI
+    needs: [test, publish-crate, build-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - name: Publier sur PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Check version match
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          CARGO=$(grep -m1 '^version' Cargo.toml | sed -E 's/version *= *"(.*)"/\1/')
+          test "$TAG" = "$CARGO"
+
+  ci:
+    needs: check-version
+    uses: ./.github/workflows/ci.yml
+
+  publish-crate:
+    needs: ci
     runs-on: ubuntu-latest
 
     steps:
-      - uses: ./.github/actions/build-sdist
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Publish crate
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  publish-pypi:
+    needs: [ci, publish-crate]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheel-*
+          merge-multiple: true
+          path: dist
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
