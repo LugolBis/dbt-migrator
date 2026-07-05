@@ -1,6 +1,6 @@
 [package]
 name = "dbt_migrator"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 description = "Migrate Legacy SQL codebase to dbt models"
 license = "GPL-3.0-or-later"
