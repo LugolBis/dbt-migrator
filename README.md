@@ -1,4 +1,4 @@
-# dbt_migrator
+# dbt-migrator
 
 **Migrate legacy SQL scripts to dbt models** with safe, lineage‑aware `{{ ref(...) }}` replacement.
 
