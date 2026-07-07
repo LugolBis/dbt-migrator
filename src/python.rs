@@ -58,10 +58,19 @@ fn migrate_project(
     serde_json::to_string(&report).map_err(|e| PyRuntimeError::new_err(e.to_string()))
 }
 
+/// Entrypoint of the Rust CLI - used by pip to configure the `dbt_migrator` command.
+#[pyfunction]
+fn cli_main(py: Python<'_>) -> PyResult<i32> {
+    let sys = py.import_bound("sys")?;
+    let argv: Vec<String> = sys.getattr("argv")?.extract()?;
+    Ok(crate::app::run(argv))
+}
+
 /// Python module `dbt_migrator` (name determined by `[lib] name` in Cargo.toml
 /// and used by Maturin for the importable module name).
 #[pymodule]
 fn dbt_migrator(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(migrate_project, m)?)?;
+    m.add_function(wrap_pyfunction!(cli_main, m)?)?;
     Ok(())
 }

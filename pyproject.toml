@@ -14,6 +14,9 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/LugolBis/dbt-migrator"
 
+[project.scripts]
+dbt_migrator = "dbt_migrator:cli_main"
+
 [build-system]
 requires = ["maturin>=1.5,<2.0"]
 build-backend = "maturin"
