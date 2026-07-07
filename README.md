@@ -42,36 +42,40 @@ The result: **clean, dbt‑native SQL** with full lineage, enabling:
 
 ## Quick Start
 
-### Command‑line Interface
+### Installation
+- Rust (`cargo`) :
+    ```bash
+    cargo install dbt_migrator
+    ```
 
-```bash
-# Install from source (requires Rust)
-cargo install dbt_migrator
+- Python (`uv` / `pip`) :
+    ```bash
+    uv pip install dbt-migrator
+    # or
+    pip install dbt-migrator
+    ```
 
-# Or run directly
-cargo run -- \
-  --project-dir /path/to/dbt_project \
-  --sql-path /path/to/legacy_sql \
-  --config migrate_config.yml \
-  --report-dir ./reports
-```
+### Usage
+- CLI :
+    ```bash
+    dbt_migrator --project-dir /path/to/dbt_project \
+    --sql-path /path/to/legacy_sql \
+    --config migrate_config.yml \
+    --report-dir ./reports
+    ```
 
-### Python Package (via PyO3)
+- Library :
+    ```python
+    # Python usage example
+    from dbt_migrator import migrate_project
 
-```bash
-pip install dbt-migrator
-```
-
-```python
-from dbt_migrator import migrate_project
-
-report = migrate_project(
-    project_dir="path/to/dbt_project",
-    sql_path="path/to/legacy_sql",
-    config_path="migrate_config.yml"
-)
-print(report.summary())
-```
+    report = migrate_project(
+        project_dir="path/to/dbt_project",
+        sql_path="path/to/legacy_sql",
+        config_path="migrate_config.yml"
+    )
+    print(report.summary())
+    ```
 
 The Python API returns the same report data (replacements, warnings, conflicts) as the CLI, ready for integration into your CI/CD workflows.
 
