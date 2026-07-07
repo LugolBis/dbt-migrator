@@ -59,9 +59,9 @@ The result: **clean, dbt‑native SQL** with full lineage, enabling:
 - CLI :
     ```bash
     dbt_migrator --project-dir /path/to/dbt_project \
-    --sql-path /path/to/legacy_sql \
-    --config migrate_config.yml \
-    --report-dir ./reports
+        --sql-path /path/to/legacy_sql \
+        --config migrate_config.yml \
+        --report-dir ./reports
     ```
 
 - Library :
